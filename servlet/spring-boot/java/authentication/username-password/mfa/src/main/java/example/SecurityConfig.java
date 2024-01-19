@@ -19,6 +19,7 @@ package example;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 
+import jakarta.servlet.DispatcherType;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authorization.AuthorizationDecision;
@@ -47,6 +48,8 @@ public class SecurityConfig {
 		// @formatter:off
 		http
 			.authorizeHttpRequests((authorize) -> authorize
+				// https://github.com/spring-projects/spring-security/issues/12635#issuecomment-1468046651
+				.dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 				.requestMatchers("/favicon.ico").permitAll()
 				.requestMatchers("/second-factor", "/third-factor").access(mfaAuthorizationManager)
 				.anyRequest().authenticated()
