@@ -43,8 +43,9 @@ public class SecurityConfig {
 
 	@Bean
 	SecurityFilterChain web(HttpSecurity http,
-			AuthorizationManager<RequestAuthorizationContext> mfaAuthorizationManager) throws Exception {
-		MfaAuthenticationHandler mfaAuthenticationHandler = new MfaAuthenticationHandler("/second-factor");
+			AuthorizationManager<RequestAuthorizationContext> mfaAuthorizationManager,
+			AuthenticationFailureHandler failureHandler) throws Exception {
+		MfaAuthenticationHandler mfaAuthenticationHandler = new MfaAuthenticationHandler("/second-factor", failureHandler);
 		// @formatter:off
 		http
 			.authorizeHttpRequests((authorize) -> authorize

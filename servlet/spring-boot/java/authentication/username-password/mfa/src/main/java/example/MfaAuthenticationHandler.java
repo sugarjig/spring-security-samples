@@ -42,11 +42,13 @@ import org.springframework.security.web.authentication.SimpleUrlAuthenticationSu
 public class MfaAuthenticationHandler implements AuthenticationSuccessHandler, AuthenticationFailureHandler {
 
 	private final AuthenticationSuccessHandler successHandler;
+	private final AuthenticationFailureHandler failureHandler;
 
-	public MfaAuthenticationHandler(String url) {
+	public MfaAuthenticationHandler(String url, AuthenticationFailureHandler failureHandler) {
 		SimpleUrlAuthenticationSuccessHandler successHandler = new SimpleUrlAuthenticationSuccessHandler(url);
 		successHandler.setAlwaysUseDefaultTargetUrl(true);
 		this.successHandler = successHandler;
+		this.failureHandler = failureHandler;
 	}
 
 	@Override
@@ -54,16 +56,13 @@ public class MfaAuthenticationHandler implements AuthenticationSuccessHandler, A
 			AuthenticationException exception) throws IOException, ServletException {
 		Authentication anonymous = new AnonymousAuthenticationToken("key", "anonymousUser",
 				AuthorityUtils.createAuthorityList("ROLE_ANONYMOUS"));
-		saveMfaAuthentication(request, response, new MfaAuthentication(anonymous));
+		Authentication authentication = new MfaAuthentication(anonymous);
+		SecurityContextHolder.getContext().setAuthentication(new MfaAuthentication(authentication));
+		this.failureHandler.onAuthenticationFailure(request, response, exception);
 	}
 
 	@Override
 	public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
-			Authentication authentication) throws IOException, ServletException {
-		saveMfaAuthentication(request, response, authentication);
-	}
-
-	private void saveMfaAuthentication(HttpServletRequest request, HttpServletResponse response,
 			Authentication authentication) throws IOException, ServletException {
 		SecurityContextHolder.getContext().setAuthentication(new MfaAuthentication(authentication));
 		this.successHandler.onAuthenticationSuccess(request, response, authentication);

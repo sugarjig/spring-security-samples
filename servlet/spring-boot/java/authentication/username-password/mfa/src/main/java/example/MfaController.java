@@ -71,7 +71,7 @@ public class MfaController {
 	@PostMapping("/second-factor")
 	public void processSecondFactor(@RequestParam("code") String code, MfaAuthentication authentication,
 			HttpServletRequest request, HttpServletResponse response) throws Exception {
-		MfaAuthenticationHandler handler = new MfaAuthenticationHandler("/third-factor");
+		MfaAuthenticationHandler handler = new MfaAuthenticationHandler("/third-factor", this.failureHandler);
 		String secret = getSecret(authentication);
 		if (this.mfaService.check(secret, code)) {
 			handler.onAuthenticationSuccess(request, response, authentication.getFirst());
