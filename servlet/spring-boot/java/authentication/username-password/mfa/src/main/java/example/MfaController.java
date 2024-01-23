@@ -22,6 +22,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.codec.Hex;
 import org.springframework.security.crypto.encrypt.BytesEncryptor;
@@ -71,13 +72,16 @@ public class MfaController {
 	@PostMapping("/second-factor")
 	public void processSecondFactor(@RequestParam("code") String code, MfaAuthentication authentication,
 			HttpServletRequest request, HttpServletResponse response) throws Exception {
-		MfaAuthenticationHandler handler = new MfaAuthenticationHandler("/third-factor", this.failureHandler);
 		String secret = getSecret(authentication);
 		if (this.mfaService.check(secret, code)) {
-			handler.onAuthenticationSuccess(request, response, authentication.getFirst());
+			// https://docs.spring.io/spring-security/reference/servlet/authentication/architecture.html#servlet-authentication-securitycontextholder
+			SecurityContext context = SecurityContextHolder.createEmptyContext();
+			context.setAuthentication(authentication.getFirst());
+			SecurityContextHolder.setContext(context);
+			this.successHandler.onAuthenticationSuccess(request, response, authentication.getFirst());
 		}
 		else {
-			handler.onAuthenticationFailure(request, response, new BadCredentialsException("bad credentials"));
+			this.failureHandler.onAuthenticationFailure(request, response, new BadCredentialsException("bad credentials"));
 		}
 	}
 
